@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
  
     const foodCollection = client.db('foodDB').collection('foods')
 
@@ -79,6 +79,37 @@ async function run() {
       const result = await foodCollection.find(filter).toArray()
       res.send(result)
       
+    })
+
+    app.get('/foods/user/:email',async(req,res)=>{
+      const email = req.params.email
+      const filter = {email:email}
+      const result = await foodCollection.find(filter).toArray()
+      res.send(result)
+    })
+
+   app.put('/foods/user/:id',async(req,res)=>{
+       const id = req.params.id
+       const filter = {_id: new ObjectId(id)}
+       const options = {upsert:true}
+       const updatedRequest = req.body
+       const request = {
+        $set:{
+          email:updatedRequest.email,
+        
+         
+          
+        request_date: updatedRequest.request_date,
+   
+          status: updatedRequest.status,
+          note: updatedRequest.note,
+        
+        }
+       }
+       const result = await foodCollection.updateOne(filter,request,options)
+       res.send(result)
+     
+
     })
   
     //    Send a ping to confirm a successful connection
