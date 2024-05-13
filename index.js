@@ -37,7 +37,7 @@ const logger = (req,res,next)=>{
 
 const verifyToken = (req,res,next)=>{
   const token = req?.cookies?.token
-  console.log('token in the middleware',token)
+  // console.log('token in the middleware',token)
   if(!token){
     return res.status(401).send({message:'Unauthorized access'})
   }
@@ -75,23 +75,23 @@ async function run() {
       console.log('logging out user',user)
       res.clearCookie('token',{maxAge:0}).send({success:true})
     })
+
     app.post('/foods',   async (req,res)=>{
+    
         const food = req.body
-  
         const result = await foodCollection.insertOne(food)
         res.send(result)
     })
 
-    app.get('/foods', logger, verifyToken,  async(req,res)=>{
-      let query = {};
-      if (req.query?.email) {
-          query = { email: req.query.email }
-      }
+    app.get('/foods', logger,  async(req,res)=>{
+     
+          console.log(req.query.email)
+      console.log('token user info',req.user)
+        let query = {};
+        if (req.query?.email) {
+            query = { email: req.query.email }
+            }
         const cursor = foodCollection.find()
-        console.log(req.query.email)
-        
-        console.log('user info',req.user)
-    
         const result = await cursor.toArray()
         res.send(result)
     })
@@ -127,6 +127,8 @@ async function run() {
 
     })
 
+  
+
     app.get('/food/:email',async(req,res)=>{
       const email = req.params.email
       const filter = {email:email,status:"Requested"}
@@ -134,8 +136,9 @@ async function run() {
       res.send(result)
       
     })
-
-    app.get('/foods/user/:email',async(req,res)=>{
+  
+    app.get('/foods/user/:email', async(req,res)=>{
+  
       const email = req.params.email
       const filter = {email:email}
       const result = await foodCollection.find(filter).toArray()
@@ -146,8 +149,8 @@ async function run() {
        const id = req.params.id
        const filter = {_id: new ObjectId(id)}
        const options = {upsert:true}
-       const updatedRequest = req.body
-       const request = {
+       const update = req.body
+       const manageUpdate = {
         $set:{
           email:updatedRequest.email,
         
@@ -160,7 +163,7 @@ async function run() {
         
         }
        }
-       const result = await foodCollection.updateOne(filter,request,options)
+       const result = await foodCollection.updateOne(filter,manageUpdate,options)
        res.send(result)
      
 
