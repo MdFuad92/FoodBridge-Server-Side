@@ -76,21 +76,21 @@ async function run() {
       res.clearCookie('token',{maxAge:0}).send({success:true})
     })
 
-    app.post('/foods',   async (req,res)=>{
+    app.post('/foods', logger,verifyToken,  async (req,res)=>{
+     
+      const email = req.params.email
+      if(food!== email){
+        return res.status(403).send({message:'Forbidden Access'})
+      }
     
         const food = req.body
         const result = await foodCollection.insertOne(food)
         res.send(result)
     })
 
-    app.get('/foods', logger,  async(req,res)=>{
+    app.get('/foods', async(req,res)=>{
      
-          console.log(req.query.email)
-      console.log('token user info',req.user)
-        let query = {};
-        if (req.query?.email) {
-            query = { email: req.query.email }
-            }
+        
         const cursor = foodCollection.find()
         const result = await cursor.toArray()
         res.send(result)
@@ -129,17 +129,26 @@ async function run() {
 
   
 
-    app.get('/food/:email',async(req,res)=>{
+    app.get('/foods/request/:email', logger, verifyToken, async(req,res)=>{
+        const user = req.user.email
       const email = req.params.email
+      if(user !== email){
+        return res.status(403).send({message:'Forbidden Access'})
+      }
       const filter = {email:email,status:"Requested"}
       const result = await foodCollection.find(filter).toArray()
       res.send(result)
       
     })
   
-    app.get('/foods/user/:email', async(req,res)=>{
-  
+    app.get('/foods/user/:email', logger, verifyToken, async(req,res)=>{
+      const user = req.user.email
+    
+      
       const email = req.params.email
+      if(user !== email){
+        return res.status(403).send({message:'Forbidden Access'})
+      }
       const filter = {email:email}
       const result = await foodCollection.find(filter).toArray()
       res.send(result)
@@ -152,14 +161,16 @@ async function run() {
        const update = req.body
        const manageUpdate = {
         $set:{
-          email:updatedRequest.email,
-        
-         
-          
-        request_date: updatedRequest.request_date,
-   
-          status: updatedRequest.status,
-          note: updatedRequest.note,
+          email:update.email,
+          name:update.name,
+          food_name:update.food_name,
+          image:update.image,
+          location:update.location,
+          date:update.date,
+          photo: update.photo,
+          status:update.status,
+          note:update.note,
+          quantity:update.quantity
         
         }
        }
@@ -167,6 +178,13 @@ async function run() {
        res.send(result)
      
 
+    })
+
+    app.delete('/foods/user/:id',async (req,res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await foodCollection.deleteOne(query)
+      res.send(result)
     })
 
     
