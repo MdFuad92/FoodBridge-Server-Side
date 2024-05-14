@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 
 
 // middlewares
-app.use(cors({origin:["http://localhost:5173"],
+app.use(cors({origin:["http://localhost:5173","https://assignment-eleven-b42c8.web.app","https://assignment-eleven-b42c8.firebaseapp.com"],
   credentials:true
 }))
 app.use(express.json())
@@ -50,6 +50,12 @@ const verifyToken = (req,res,next)=>{
   })
   // next()
 }
+
+const cookieOptions = {
+  httpOnly:true,
+  sameSite:process.env.NODE_ENV === "production"?"none":"strict",
+  secure:process.env.NODE_ENV === "production"?true:false
+}
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -62,18 +68,14 @@ async function run() {
       const user = req.body
       console.log(user,'user token')
       const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
-      res.cookie('token',token,{
-        httpOnly:true,
-        secure:true,
-        sameSite:'none'
-      })
+      res.cookie('token',token,cookieOptions)
       .send({success:true})   
     })
 
     app.post('/logout',async(req,res)=>{
       const user = req.body
       console.log('logging out user',user)
-      res.clearCookie('token',{maxAge:0}).send({success:true})
+      res.clearCookie('token',{...cookieOptions,maxAge:0}).send({success:true})
     })
 
     app.post('/foods', logger,verifyToken,  async (req,res)=>{
