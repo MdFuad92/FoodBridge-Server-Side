@@ -53,8 +53,8 @@ const verifyToken = (req,res,next)=>{
 
 const cookieOptions = {
   httpOnly:true,
-  sameSite:process.env.NODE_ENV === "production"?"none":"strict",
-  secure:process.env.NODE_ENV === "production"?true:false
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
 }
 async function run() {
   try {
@@ -78,13 +78,8 @@ async function run() {
       res.clearCookie('token',{...cookieOptions,maxAge:0}).send({success:true})
     })
 
-    app.post('/foods', logger,verifyToken,  async (req,res)=>{
-     
-      const email = req.params.email
-      if(food!== email){
-        return res.status(403).send({message:'Forbidden Access'})
-      }
-    
+    app.post('/foods',   async (req,res)=>{
+
         const food = req.body
         const result = await foodCollection.insertOne(food)
         res.send(result)
@@ -112,7 +107,7 @@ async function run() {
        const updatedRequest = req.body
        const request = {
         $set:{
-          email:updatedRequest.email,
+          user_email:updatedRequest.user_email,
         
          
           
@@ -131,19 +126,19 @@ async function run() {
 
   
 
-    app.get('/foods/request/:email', logger, verifyToken, async(req,res)=>{
+    app.get('/foods-request/:email', logger, verifyToken, async(req,res)=>{
         const user = req.user.email
       const email = req.params.email
       if(user !== email){
         return res.status(403).send({message:'Forbidden Access'})
       }
-      const filter = {email:email,status:"Requested"}
+      const filter = {user_email:email,status:"Requested"}
       const result = await foodCollection.find(filter).toArray()
       res.send(result)
       
     })
   
-    app.get('/foods/user/:email', logger, verifyToken, async(req,res)=>{
+    app.get('/managefood/:email', logger, verifyToken, async(req,res)=>{
       const user = req.user.email
     
       
@@ -151,7 +146,7 @@ async function run() {
       if(user !== email){
         return res.status(403).send({message:'Forbidden Access'})
       }
-      const filter = {email:email}
+      const filter = {email:email,status:"Available"}
       const result = await foodCollection.find(filter).toArray()
       res.send(result)
     })
